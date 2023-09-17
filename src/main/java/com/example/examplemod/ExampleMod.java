@@ -1,6 +1,9 @@
 package com.example.examplemod;
 
+import com.example.examplemod.block.BlockRegistry;
+import com.example.examplemod.blockentity.BlockEntityRegistry;
 import com.example.examplemod.building.BuildingsRegistry;
+import com.example.examplemod.entity.EntityRegistry;
 import com.example.examplemod.job.JobsRegistry;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.Minecraft;
@@ -37,5 +40,8 @@ public class ExampleMod {
     public ExampleMod() {
         JobsRegistry.register();
         BuildingsRegistry.register();
+        BlockRegistry.register();
+        BlockEntityRegistry.register();
+        EntityRegistry.register();
     }
 }

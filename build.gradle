@@ -141,13 +141,13 @@ dependencies {
     // runtimeOnly fg.deobf("mezz.jei:jei-${mc_version}-forge:${jei_version}")
 
     implementation fg.deobf("curse.maven:minecolonies-245506:4751617")
-    implementation fg.deobf("curse.maven:minecolonies-245506:4751620")//sources
+    //implementation fg.deobf("curse.maven:minecolonies-245506:4751620")//sources
     implementation fg.deobf("curse.maven:blockui-522992:4584032")
-    implementation fg.deobf("curse.maven:blockui-522992:4584035")//sources
+    //implementation fg.deobf("curse.maven:blockui-522992:4584035")//sources
     implementation fg.deobf("curse.maven:domum-ornamentum-527361:4741124")
-    implementation fg.deobf("curse.maven:domum-ornamentum-527361:4741126")//sources
+    //implementation fg.deobf("curse.maven:domum-ornamentum-527361:4741126")//sources
     implementation fg.deobf("curse.maven:structurize-298744:4716714")
-    implementation fg.deobf("curse.maven:structurize-298744:4716716")//sources
+    //implementation fg.deobf("curse.maven:structurize-298744:4716716")//sources
     implementation fg.deobf("curse.maven:multi-piston-303278:4631200")
 
     // Example mod dependency using a mod jar from ./libs with a flat dir repository

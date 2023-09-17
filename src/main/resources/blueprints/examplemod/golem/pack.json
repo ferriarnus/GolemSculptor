@@ -1,0 +1,14 @@
+{
+  "icon": "wooden.png",
+  "name": "Golems",
+  "authors": [
+    "Ferri_Arnus"
+  ],
+  "desc": "Golems",
+  "mods": [
+    "structurize",
+    "minecolonies"
+  ],
+  "version": "1",
+  "pack-format": "1"
+}

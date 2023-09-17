@@ -1,9 +1,8 @@
 package com.example.examplemod.building;
 
 import com.example.examplemod.ExampleMod;
+import com.example.examplemod.block.BlockRegistry;
 import com.example.examplemod.job.JobsRegistry;
-import com.minecolonies.api.blocks.ModBlocks;
-import com.minecolonies.api.colony.buildings.ModBuildings;
 import com.minecolonies.api.colony.buildings.registry.BuildingEntry;
 import com.minecolonies.api.entity.citizen.Skill;
 import com.minecolonies.api.util.constant.Constants;
@@ -13,6 +12,9 @@ import com.minecolonies.coremod.colony.buildings.moduleviews.MinimumStockModuleV
 import com.minecolonies.coremod.colony.buildings.moduleviews.WorkerBuildingModuleView;
 import com.minecolonies.coremod.colony.buildings.views.EmptyView;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.RegistryObject;
@@ -26,10 +28,10 @@ public class BuildingsRegistry {
     }
 
     public static final RegistryObject<BuildingEntry> SCULPTOR = BUILDINGS.register("sculptor", () -> new BuildingEntry.Builder()
-            .setBuildingBlock(ModBlocks.blockHutLibrary)
+            .setBuildingBlock(BlockRegistry.SCUPTOR.get())
             .setBuildingProducer(BuildingSculptor::new)
             .setBuildingViewProducer(() -> EmptyView::new)
-            .setRegistryName(new ResourceLocation(Constants.MOD_ID, ModBuildings.LIBRARY_ID))
+            .setRegistryName(new ResourceLocation(ExampleMod.MODID, "sculptor"))
             .addBuildingModuleProducer(() -> new WorkerBuildingModule(JobsRegistry.SCULPTOR.get(), Skill.Mana, Skill.Creativity, true, (b) -> 1), () -> WorkerBuildingModuleView::new)
             .addBuildingModuleProducer(MinimumStockModule::new, () -> MinimumStockModuleView::new)
             .createBuildingEntry());
