@@ -11,11 +11,11 @@ import net.minecraftforge.registries.RegistryObject;
 
 public class EntityRegistry {
 
-    public static DeferredRegister<EntityType<? extends Entity>> ENTITY_TYPES = DeferredRegister.create(ForgeRegistries.ENTITY_TYPES, ExampleMod.MODID);
+    public static DeferredRegister<EntityType<?>> ENTITY_TYPES = DeferredRegister.create(ForgeRegistries.ENTITY_TYPES, ExampleMod.MODID);
 
     public static void register() {
         ENTITY_TYPES.register(FMLJavaModLoadingContext.get().getModEventBus());
     }
 
-    public static final RegistryObject<EntityType<SculptedGolem>> GOLEM = ENTITY_TYPES.register("golem", () -> EntityType.Builder.of(SculptedGolem::new, MobCategory.MISC).sized(1.4F, 2.7F).clientTrackingRange(10).build(null));
+    public static final RegistryObject<EntityType<SculptedGolem>> GOLEM = ENTITY_TYPES.register("golem", () -> EntityType.Builder.of(SculptedGolem::new, MobCategory.MISC).sized(1.4F, 2.7F).clientTrackingRange(10).build("golem"));
 }

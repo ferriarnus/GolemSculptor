@@ -2,10 +2,14 @@ package com.example.examplemod.entity;
 
 import com.example.examplemod.blockentity.SculptorBlockEntity;
 import com.example.examplemod.building.BuildingSculptor;
+import com.example.examplemod.entity.goals.MoveToBuildingGoal;
 import com.minecolonies.api.entity.mobs.AbstractEntityMinecoloniesMob;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.world.entity.ai.goal.MoveBackToVillageGoal;
@@ -30,7 +34,7 @@ public class SculptedGolem extends AbstractGolem {
     protected void registerGoals() {
         this.goalSelector.addGoal(1, new MeleeAttackGoal(this, 1.0D, true));
         this.goalSelector.addGoal(2, new MoveTowardsTargetGoal(this, 0.9D, 32.0F));
-        this.goalSelector.addGoal(2, new MoveBackToVillageGoal(this, 0.6D, false));
+        this.goalSelector.addGoal(2, new MoveToBuildingGoal(this, 0.6D, false));
         this.goalSelector.addGoal(7, new LookAtPlayerGoal(this, Player.class, 6.0F));
         this.goalSelector.addGoal(8, new RandomLookAroundGoal(this));
         //this.targetSelector.addGoal(1, new DefendVillageTargetGoal(this)); //TODO custom Goal
@@ -42,19 +46,27 @@ public class SculptedGolem extends AbstractGolem {
         this.building = building;
     }
 
+    public static AttributeSupplier.Builder createAttributes() {
+        return Mob.createMobAttributes().add(Attributes.MAX_HEALTH, 100.0).add(Attributes.MOVEMENT_SPEED, 0.25).add(Attributes.KNOCKBACK_RESISTANCE, 1.0).add(Attributes.ATTACK_DAMAGE, 15.0);
+    }
+
     @Override
     public void onRemovedFromWorld() {
-        building.removeGolem(this);
+        if (building != null) {
+            building.removeGolem(this);
+        }
         super.onRemovedFromWorld();
     }
 
     @Override
     public void onAddedToWorld() {
         super.onAddedToWorld();
-        if (!building.getEntityUUID().contains(this.getUUID())) {
-            this.remove(RemovalReason.DISCARDED);
-        } else {
-            building.addGolem(this);
+        if (!level().isClientSide) { //TODO this is too early, maybe in a tick?
+            if (building == null || !building.getEntityUUID().contains(this.getUUID())) {
+                //this.remove(RemovalReason.DISCARDED);
+            } else {
+                //building.addGolem(this);
+            }
         }
     }
 

@@ -1,6 +1,8 @@
 package com.example.examplemod.ai;
 
 import com.example.examplemod.building.BuildingSculptor;
+import com.example.examplemod.entity.EntityRegistry;
+import com.example.examplemod.entity.SculptedGolem;
 import com.example.examplemod.job.JobSculptor;
 import com.minecolonies.api.entity.ai.statemachine.AITarget;
 import com.minecolonies.api.entity.ai.statemachine.states.AIWorkerState;
@@ -8,8 +10,6 @@ import com.minecolonies.api.entity.ai.statemachine.states.IAIState;
 import com.minecolonies.api.util.InventoryUtils;
 import com.minecolonies.api.util.ItemStackUtils;
 import com.minecolonies.coremod.entity.ai.basic.AbstractEntityAISkill;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
@@ -47,10 +47,11 @@ public class SculptorAI extends AbstractEntityAISkill<JobSculptor, BuildingSculp
         final boolean hasItems =
                 InventoryUtils.getItemCountInItemHandler((worker.getInventoryCitizen()),
                         (ItemStack stack) -> ItemStackUtils.compareItemStackListIgnoreStackSize(building.getGolemItems(), stack)) > 1;
-        if (hasItems) {
-            LivingEntity entity = EntityType.IRON_GOLEM.create(worker.level());
-            entity.setPos(worker.position());
+        if (hasItems && building.canMakeGolem()) {
+            SculptedGolem entity = EntityRegistry.GOLEM.get().create(worker.level());
             building.addGolem(entity);
+            entity.setBuilding(building);
+            entity.setPos(building.getPosition().above().getCenter());
             worker.level().addFreshEntity(entity);
         }
         return AIWorkerState.DECIDE;
