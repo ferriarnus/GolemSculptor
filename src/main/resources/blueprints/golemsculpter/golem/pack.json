@@ -1,10 +1,10 @@
 {
-  "icon": "wooden.png",
-  "name": "Golems",
+  "icon": "",
+  "name": "Golem Sculptor",
   "authors": [
     "Ferri_Arnus"
   ],
-  "desc": "Golems",
+  "desc": "adds the golem sculpter",
   "mods": [
     "structurize",
     "minecolonies"

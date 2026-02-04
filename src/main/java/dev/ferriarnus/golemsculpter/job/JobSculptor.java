@@ -1,8 +1,8 @@
 package dev.ferriarnus.golemsculpter.job;
 
+import com.minecolonies.core.colony.jobs.AbstractJob;
 import dev.ferriarnus.golemsculpter.ai.SculptorAI;
 import com.minecolonies.api.colony.ICitizenData;
-import com.minecolonies.coremod.colony.jobs.AbstractJob;
 
 public class JobSculptor extends AbstractJob<SculptorAI, JobSculptor> {
     public JobSculptor(ICitizenData entity) {

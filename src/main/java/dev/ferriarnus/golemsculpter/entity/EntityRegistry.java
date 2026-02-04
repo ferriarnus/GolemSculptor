@@ -1,20 +1,22 @@
 package dev.ferriarnus.golemsculpter.entity;
 
 import dev.ferriarnus.golemsculpter.GolemSculpter;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.registries.DeferredRegister;
-import net.minecraftforge.registries.ForgeRegistries;
-import net.minecraftforge.registries.RegistryObject;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.registries.DeferredHolder;
+import net.neoforged.neoforge.registries.DeferredRegister;
+
 
 public class EntityRegistry {
 
-    public static DeferredRegister<EntityType<?>> ENTITY_TYPES = DeferredRegister.create(ForgeRegistries.ENTITY_TYPES, GolemSculpter.MODID);
+    public static DeferredRegister<EntityType<?>> ENTITY_TYPES = DeferredRegister.create(Registries.ENTITY_TYPE, GolemSculpter.MODID);
 
-    public static void register() {
-        ENTITY_TYPES.register(FMLJavaModLoadingContext.get().getModEventBus());
+    public static void register(IEventBus bus) {
+        ENTITY_TYPES.register(bus);
     }
 
-    public static final RegistryObject<EntityType<SculptedGolem>> GOLEM = ENTITY_TYPES.register("golem", () -> EntityType.Builder.of(SculptedGolem::new, MobCategory.MISC).sized(1.4F, 2.7F).clientTrackingRange(10).build("golem"));
+    public static final DeferredHolder<EntityType<?>,EntityType<SculptedGolemEntity>> GOLEM = ENTITY_TYPES
+            .register("golem", () -> EntityType.Builder.of(SculptedGolemEntity::new, MobCategory.MISC).sized(1.4F, 2.7F).clientTrackingRange(10).build("golem"));
 }

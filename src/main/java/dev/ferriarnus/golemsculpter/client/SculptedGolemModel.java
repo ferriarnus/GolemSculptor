@@ -1,13 +1,13 @@
 package dev.ferriarnus.golemsculpter.client;
 
-import dev.ferriarnus.golemsculpter.entity.SculptedGolem;
+import dev.ferriarnus.golemsculpter.entity.SculptedGolemEntity;
 import net.minecraft.client.model.HierarchicalModel;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
 import net.minecraft.client.model.geom.builders.*;
 import net.minecraft.util.Mth;
 
-public class SculptedGolemModel<T extends SculptedGolem> extends HierarchicalModel<T> {
+public class SculptedGolemModel<T extends SculptedGolemEntity> extends HierarchicalModel<T> {
     private final ModelPart root;
     private final ModelPart head;
     private final ModelPart rightArm;

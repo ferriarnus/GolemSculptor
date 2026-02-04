@@ -1,10 +1,10 @@
 package dev.ferriarnus.golemsculpter.block;
 
+import com.minecolonies.core.tileentities.TileEntityColonyBuilding;
 import dev.ferriarnus.golemsculpter.blockentity.BlockEntityRegistry;
 import dev.ferriarnus.golemsculpter.building.BuildingsRegistry;
 import com.minecolonies.api.blocks.AbstractBlockHut;
 import com.minecolonies.api.colony.buildings.registry.BuildingEntry;
-import com.minecolonies.api.tileentities.TileEntityColonyBuilding;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;

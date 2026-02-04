@@ -1,16 +1,16 @@
 package dev.ferriarnus.golemsculpter;
 
 import dev.ferriarnus.golemsculpter.entity.EntityRegistry;
-import dev.ferriarnus.golemsculpter.entity.SculptedGolem;
-import net.minecraftforge.event.entity.EntityAttributeCreationEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import dev.ferriarnus.golemsculpter.entity.SculptedGolemEntity;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
 
-@Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.MOD, modid = GolemSculpter.MODID)
+@EventBusSubscriber(bus = EventBusSubscriber.Bus.MOD, modid = GolemSculpter.MODID)
 public class Events {
 
     @SubscribeEvent
     static void attribute(EntityAttributeCreationEvent event){
-        event.put(EntityRegistry.GOLEM.get(), SculptedGolem.createAttributes().build());
+        event.put(EntityRegistry.GOLEM.get(), SculptedGolemEntity.getDefaultAttributes().build());
     }
 }

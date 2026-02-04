@@ -1,14 +1,15 @@
 package dev.ferriarnus.golemsculpter.ai;
 
+import com.minecolonies.core.entity.ai.workers.AbstractEntityAISkill;
 import dev.ferriarnus.golemsculpter.building.BuildingSculptor;
 import dev.ferriarnus.golemsculpter.entity.EntityRegistry;
-import dev.ferriarnus.golemsculpter.entity.SculptedGolem;
+import dev.ferriarnus.golemsculpter.entity.GolemType;
+import dev.ferriarnus.golemsculpter.entity.SculptedGolemEntity;
 import dev.ferriarnus.golemsculpter.job.JobSculptor;
 import com.minecolonies.api.entity.ai.statemachine.AITarget;
 import com.minecolonies.api.entity.ai.statemachine.states.AIWorkerState;
 import com.minecolonies.api.entity.ai.statemachine.states.IAIState;
 import com.minecolonies.api.util.InventoryUtils;
-import com.minecolonies.coremod.entity.ai.basic.AbstractEntityAISkill;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
@@ -30,20 +31,21 @@ public class SculptorAI extends AbstractEntityAISkill<JobSculptor, BuildingSculp
     }
 
     private IAIState prepare() {
-        List<ItemStack> golemItems = building.getGolemItems();
-        if (!building.canMakeGolem()) {
+        GolemType type = building.canMakeGolem();
+        if (type == null) {
             return AIWorkerState.IDLE;
         }
-        boolean hasItems = true;
+        List<ItemStack> golemItems = building.getGolemItems(type);
+        ItemStack missingItem = ItemStack.EMPTY;
         for (ItemStack itemStack : golemItems) {
             if (InventoryUtils.getItemCountInItemHandler((worker.getInventoryCitizen()),
-                    (ItemStack stack) -> ItemStack.matches(stack, itemStack)) < itemStack.getCount()) {
-                hasItems = false;
+                    (ItemStack stack) -> ItemStack.isSameItemSameComponents(stack, itemStack)) >= itemStack.getCount()) {
                 break;
             }
+            missingItem = itemStack;
         }
-        if (!hasItems) {
-            checkIfRequestForItemExistOrCreateAsync(golemItems);
+        if (!missingItem.isEmpty()) {
+            checkIfRequestForItemExistOrCreateAsync(missingItem);
         } else {
             return ModWorkStates.SCULPTER_WORK;
         }
@@ -51,19 +53,24 @@ public class SculptorAI extends AbstractEntityAISkill<JobSculptor, BuildingSculp
     }
 
     private IAIState createGolem() {
-        boolean hasItems = true;
-        for (ItemStack itemStack : building.getGolemItems()) {
+        boolean missingItem = false;
+        GolemType type = building.canMakeGolem();
+        if (type == null) {
+            return AIWorkerState.DECIDE;
+        }
+        for (ItemStack itemStack : building.getGolemItems(type)) {
             if (InventoryUtils.getItemCountInItemHandler((worker.getInventoryCitizen()),
-                    (ItemStack stack) -> ItemStack.matches(stack, itemStack)) < itemStack.getCount()) {
-                hasItems = false;
+                    (ItemStack stack) -> ItemStack.isSameItemSameComponents(stack, itemStack)) >= itemStack.getCount()) {
                 break;
             }
+            missingItem = true;
         }
-        if (hasItems && building.canMakeGolem()) {
-            SculptedGolem entity = EntityRegistry.GOLEM.get().create(worker.level());
-            building.addGolem(entity);
+        if (!missingItem) {
+            SculptedGolemEntity entity = EntityRegistry.GOLEM.get().create(worker.level());
             entity.setBuilding(building);
             entity.setPos(building.getPosition().above().getCenter());
+            entity.setGolemType(type);
+            building.addGolem(entity);
             worker.level().addFreshEntity(entity);
         }
         return AIWorkerState.DECIDE;

@@ -1,33 +1,33 @@
 package dev.ferriarnus.golemsculpter.job;
 
+import com.minecolonies.core.colony.jobs.views.DefaultJobView;
 import dev.ferriarnus.golemsculpter.GolemSculpter;
 import com.minecolonies.api.colony.jobs.ModJobs;
 import com.minecolonies.api.colony.jobs.registry.JobEntry;
 import com.minecolonies.api.util.constant.Constants;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.registries.DeferredRegister;
-import net.minecraftforge.registries.RegistryObject;
-import com.minecolonies.coremod.colony.jobs.views.DefaultJobView;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.registries.DeferredHolder;
+import net.neoforged.neoforge.registries.DeferredRegister;
 
 import java.util.function.Supplier;
 
 public class JobsRegistry {
 
-    public final static DeferredRegister<JobEntry> JOBS = DeferredRegister.create(new ResourceLocation(Constants.MOD_ID, "jobs"), GolemSculpter.MODID);
+    public final static DeferredRegister<JobEntry> JOBS = DeferredRegister.create(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "jobs"), GolemSculpter.MODID);
 
-    public static void register() {
-        JOBS.register(FMLJavaModLoadingContext.get().getModEventBus());
+    public static void register(IEventBus bus) {
+        JOBS.register(bus);
     }
 
-    public static final RegistryObject<JobEntry> SCULPTOR = register(JOBS, "sculptor", () -> new JobEntry.Builder()
+    public static final DeferredHolder<JobEntry, JobEntry> SCULPTOR = register(JOBS, "sculptor", () -> new JobEntry.Builder()
             .setJobProducer(JobSculptor::new)
             .setJobViewProducer(() -> DefaultJobView::new)
-            .setRegistryName(new ResourceLocation(GolemSculpter.MODID, "sculptor"))
+            .setRegistryName(ResourceLocation.fromNamespaceAndPath(GolemSculpter.MODID, "sculptor"))
             .createJobEntry());
 
-    private static RegistryObject<JobEntry> register(final DeferredRegister<JobEntry> deferredRegister, final String path, final Supplier<JobEntry> supplier) {
-        ModJobs.jobs.add(new ResourceLocation(Constants.MOD_ID, path));
+    private static DeferredHolder<JobEntry, JobEntry> register(final DeferredRegister<JobEntry> deferredRegister, final String path, final Supplier<JobEntry> supplier) {
+        ModJobs.jobs.add(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, path));
         return deferredRegister.register(path, supplier);
     }
 
