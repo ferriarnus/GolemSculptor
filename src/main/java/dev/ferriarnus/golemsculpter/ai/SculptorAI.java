@@ -1,6 +1,8 @@
 package dev.ferriarnus.golemsculpter.ai;
 
-import com.minecolonies.core.entity.ai.workers.AbstractEntityAISkill;
+import com.minecolonies.api.util.ItemStackUtils;
+import com.minecolonies.api.util.Tuple;
+import com.minecolonies.core.entity.ai.workers.AbstractEntityAIInteract;
 import dev.ferriarnus.golemsculpter.building.BuildingSculptor;
 import dev.ferriarnus.golemsculpter.entity.EntityRegistry;
 import dev.ferriarnus.golemsculpter.entity.GolemType;
@@ -13,9 +15,9 @@ import com.minecolonies.api.util.InventoryUtils;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.List;
+import java.util.function.Predicate;
 
-public class SculptorAI extends AbstractEntityAISkill<JobSculptor, BuildingSculptor> {
+public class SculptorAI extends AbstractEntityAIInteract<JobSculptor, BuildingSculptor> {
 
     public SculptorAI(@NotNull JobSculptor job) {
         super(job);
@@ -27,7 +29,10 @@ public class SculptorAI extends AbstractEntityAISkill<JobSculptor, BuildingSculp
     }
 
     private IAIState startWorkingAtOwnBuilding() {
-        return this.walkToBuilding() ? this.getState() : AIWorkerState.DECIDE;
+        if (!walkToBuilding()) {
+            return getState();
+        }
+        return AIWorkerState.DECIDE;
     }
 
     private IAIState prepare() {
@@ -35,44 +40,61 @@ public class SculptorAI extends AbstractEntityAISkill<JobSculptor, BuildingSculp
         if (type == null) {
             return AIWorkerState.IDLE;
         }
-        List<ItemStack> golemItems = building.getGolemItems(type);
-        ItemStack missingItem = ItemStack.EMPTY;
-        for (ItemStack itemStack : golemItems) {
-            if (InventoryUtils.getItemCountInItemHandler((worker.getInventoryCitizen()),
-                    (ItemStack stack) -> ItemStack.isSameItemSameComponents(stack, itemStack)) >= itemStack.getCount()) {
-                break;
-            }
-            missingItem = itemStack;
+
+        boolean found = true;
+        //items are in the inv or building, or a request is made
+        for (ItemStack item : building.getGolemItems(type)) {
+            found = found && checkIfRequestForItemExistOrCreateAsync(item);
         }
-        if (!missingItem.isEmpty()) {
-            checkIfRequestForItemExistOrCreateAsync(missingItem);
-        } else {
+
+        //All items are in the inv
+        if (found) {
+            //Check the inv
+            for (ItemStack item : building.getGolemItems(type)) {
+                Predicate<ItemStack> predicate = (ItemStack s) -> ItemStackUtils.compareItemStacksIgnoreStackSize(s, item);
+                //Missing items found, gather them
+                if (InventoryUtils.getItemCountInItemHandler(worker.getInventoryCitizen(), predicate) < item.getCount()) {
+                    needsCurrently = new Tuple<>(predicate, item.getCount());
+                    return AIWorkerState.GATHERING_REQUIRED_MATERIALS;
+                }
+            }
             return ModWorkStates.SCULPTER_WORK;
         }
+
+        //Items aren't ready, request is made to get them
+        return AIWorkerState.IDLE;
+    }
+
+    @Override
+    public IAIState getStateAfterPickUp() {
         return AIWorkerState.DECIDE;
     }
 
     private IAIState createGolem() {
-        boolean missingItem = false;
         GolemType type = building.canMakeGolem();
         if (type == null) {
             return AIWorkerState.DECIDE;
         }
-        for (ItemStack itemStack : building.getGolemItems(type)) {
-            if (InventoryUtils.getItemCountInItemHandler((worker.getInventoryCitizen()),
-                    (ItemStack stack) -> ItemStack.isSameItemSameComponents(stack, itemStack)) >= itemStack.getCount()) {
-                break;
+        for (ItemStack item : building.getGolemItems(type)) {
+            //Consume all needed items
+            int count = item.getCount();
+            Predicate<ItemStack> predicate = (ItemStack s) -> ItemStackUtils.compareItemStacksIgnoreStackSize(s, item);
+            //Shouldn't happen, but if there are not enough items stop
+            if (InventoryUtils.getItemCountInItemHandler(getInventory(), predicate) < count) {
+                return AIWorkerState.IDLE;
             }
-            missingItem = true;
+            while (count > 0) {
+                final int slot = worker.getCitizenInventoryHandler().findFirstSlotInInventoryWith(item.getItem());
+                ItemStack result = getInventory().extractItem(slot, item.getCount(), false);
+                count -= result.getCount();
+            }
         }
-        if (!missingItem) {
-            SculptedGolemEntity entity = EntityRegistry.GOLEM.get().create(worker.level());
-            entity.setBuilding(building);
-            entity.setPos(building.getPosition().above().getCenter());
-            entity.setGolemType(type);
-            building.addGolem(entity);
-            worker.level().addFreshEntity(entity);
-        }
+        SculptedGolemEntity entity = EntityRegistry.GOLEM.get().create(worker.level());
+        entity.setGolemType(type);
+        entity.setBuilding(building);
+        building.addGolem(entity);
+        entity.setPos(building.getPosition(entity).getCenter());
+        worker.level().addFreshEntity(entity);
         return AIWorkerState.DECIDE;
     }
 

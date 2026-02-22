@@ -11,6 +11,7 @@ import com.minecolonies.api.util.Log;
 import com.minecolonies.core.entity.ai.minimal.EntityAIInteractToggleAble;
 import com.minecolonies.core.entity.pathfinding.navigation.AbstractAdvancedPathNavigate;
 import com.minecolonies.core.entity.pathfinding.navigation.PathingStuckHandler;
+import com.minecolonies.core.util.AttributeModifierUtils;
 import dev.ferriarnus.golemsculpter.blockentity.SculptorBlockEntity;
 import dev.ferriarnus.golemsculpter.building.BuildingSculptor;
 import dev.ferriarnus.golemsculpter.ai.GolemAi;
@@ -20,6 +21,7 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.PathfinderMob;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
@@ -27,6 +29,7 @@ import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.NotNull;
 
+import static com.minecolonies.api.util.constant.CitizenConstants.GUARD_HEALTH_MOD_BUILDING_NAME;
 import static com.minecolonies.core.entity.ai.minimal.EntityAIInteractToggleAble.*;
 
 public class SculptedGolemEntity extends AbstractFastMinecoloniesEntity {
@@ -75,6 +78,7 @@ public class SculptedGolemEntity extends AbstractFastMinecoloniesEntity {
             }
 
         }
+        this.building.removeGolem(this);
         this.remove(RemovalReason.DISCARDED);
         return true;
     }
@@ -82,11 +86,17 @@ public class SculptedGolemEntity extends AbstractFastMinecoloniesEntity {
     private boolean isInitialized() {
         if (this.level() != null && this.isAlive() && !this.isInvisible()) {
             if (this.building != null) {
+                building.addGolem(this);
+                AttributeModifierUtils.addHealthModifier(this,
+                        new AttributeModifier(GUARD_HEALTH_MOD_BUILDING_NAME, building.getBonusHealth(), AttributeModifier.Operation.ADD_VALUE));
                 return true;
             }
             var entity = this.level().getBlockEntity(BlockPos.of(position));
             if (entity instanceof SculptorBlockEntity blockEntity && blockEntity.getBuilding() instanceof BuildingSculptor sculptor) {
                 this.building = sculptor;
+                building.addGolem(this);
+                AttributeModifierUtils.addHealthModifier(this,
+                        new AttributeModifier(GUARD_HEALTH_MOD_BUILDING_NAME, building.getBonusHealth(), AttributeModifier.Operation.ADD_VALUE));
                 return true;
             }
         }
@@ -154,12 +164,14 @@ public class SculptedGolemEntity extends AbstractFastMinecoloniesEntity {
     @Override
     public void addAdditionalSaveData(CompoundTag compound) {
         compound.putLong("position", this.position);
+        compound.putInt("type", this.type.ordinal());
         super.addAdditionalSaveData(compound);
     }
 
     @Override
     public void readAdditionalSaveData(CompoundTag compound) {
         this.position = compound.getLong("position");
+        this.type = GolemType.values()[compound.getInt("type")];
         super.readAdditionalSaveData(compound);
     }
 
@@ -171,8 +183,8 @@ public class SculptedGolemEntity extends AbstractFastMinecoloniesEntity {
             this.navigation = pathNavigate;
             this.pathNavigate.setCanFloat(true);
             this.pathNavigate.setSwimSpeedFactor(CITIZEN_SWIM_BONUS);
-            this.pathNavigate.getPathingOptions().setEnterDoors(true); //Do they fit...
-            this.pathNavigate.getPathingOptions().setCanOpenDoors(true);
+            this.pathNavigate.getPathingOptions().setEnterDoors(false); //Do they fit...
+            this.pathNavigate.getPathingOptions().setCanOpenDoors(false);
             this.pathNavigate.setStuckHandler(PathingStuckHandler.createStuckHandler().withTeleportOnFullStuck().withTeleportSteps(5));
         }
         return pathNavigate;
@@ -181,6 +193,7 @@ public class SculptedGolemEntity extends AbstractFastMinecoloniesEntity {
     public static AttributeSupplier.Builder getDefaultAttributes() {
         return LivingEntity.createLivingAttributes()
                 .add(Attributes.ATTACK_DAMAGE, Attributes.ATTACK_DAMAGE.value().getDefaultValue())
-                .add(Attributes.FOLLOW_RANGE, 100.0);
+                .add(Attributes.FOLLOW_RANGE, 100.0)
+                .add(Attributes.ATTACK_KNOCKBACK, 2.0);
     }
 }

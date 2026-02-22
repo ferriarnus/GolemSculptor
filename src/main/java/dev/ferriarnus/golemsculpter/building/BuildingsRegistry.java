@@ -1,6 +1,8 @@
 package dev.ferriarnus.golemsculpter.building;
 
+import com.minecolonies.api.colony.jobs.ModJobs;
 import com.minecolonies.core.colony.buildings.modules.BuildingModules;
+import com.minecolonies.core.colony.buildings.modules.NoPrivateCrafterWorkerModule;
 import com.minecolonies.core.colony.buildings.modules.WorkerBuildingModule;
 import com.minecolonies.core.colony.buildings.moduleviews.WorkerBuildingModuleView;
 import com.minecolonies.core.colony.buildings.views.EmptyView;

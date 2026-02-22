@@ -1,5 +1,6 @@
 package dev.ferriarnus.golemsculpter.ai;
 
+import com.minecolonies.api.entity.ai.combat.threat.IThreatTableEntity;
 import com.minecolonies.api.entity.ai.statemachine.states.IState;
 import com.minecolonies.api.entity.ai.statemachine.tickratestatemachine.TickRateStateMachine;
 import com.minecolonies.api.entity.ai.statemachine.tickratestatemachine.TickingTransition;
@@ -9,7 +10,10 @@ import com.minecolonies.api.util.Log;
 import com.minecolonies.core.entity.pathfinding.navigation.EntityNavigationUtils;
 import com.minecolonies.core.entity.pathfinding.pathresults.PathResult;
 import dev.ferriarnus.golemsculpter.entity.SculptedGolemEntity;
+import net.minecraft.core.BlockPos;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.Goal;
 
 import java.util.Random;
@@ -22,7 +26,7 @@ public class GolemAi extends Goal {
     //TODO is this ever not null?
     private PathResult attackPath;
     private int attacktimer = 0;
-    private Random randomGenerator = new Random();
+    private final Random randomGenerator = new Random();
 
     public GolemAi(SculptedGolemEntity golem) {
         this.golem = golem;
@@ -45,7 +49,8 @@ public class GolemAi extends Goal {
         if (!golem.getBuilding().getColony().getRaiderManager().isRaided()) {
             return false;
         }
-        if (this.golem.getTarget() != null && this.golem.getTarget().isAlive()) { //Don't attack allies
+        //Don't attack allies
+        if (this.golem.getTarget() != null && this.golem.getTarget().isAlive()) {
             this.golem.getTarget().setLastHurtByMob(this.golem);
             return true;
         } else {
@@ -70,9 +75,15 @@ public class GolemAi extends Goal {
             int distance = BlockPosUtil.getMaxDistance2D(this.golem.blockPosition(), this.golem.getTarget().blockPosition());
             if (distance < 2 && this.attacktimer == 0) {
                 this.golem.swing(InteractionHand.MAIN_HAND);
-                this.golem.playSound(MercenarySounds.mercenaryAttack, 0.55F, 1.0F);
-                this.golem.getTarget().hurt(this.golem.level().damageSources().mobAttack(this.golem), 15.0F);
-                this.golem.getTarget().setRemainingFireTicks(60);
+                this.golem.playSound(SoundEvents.IRON_GOLEM_ATTACK, 0.55F, 1.0F);
+                this.golem.getTarget().hurt(this.golem.level().damageSources().mobAttack(this.golem), this.golem.getBuilding().getAttackDamage());
+                //Taunt
+                if (this.golem.getTarget() instanceof Mob mob) {
+                    mob.setTarget(this.golem);
+                    if (mob instanceof IThreatTableEntity threatTableEntity) {
+                        threatTableEntity.getThreatTable().addThreat(this.golem, 5);
+                    }
+                }
                 this.attacktimer = 5;
             } else if (distance > 50) {
                 this.golem.setTarget(null);
@@ -106,7 +117,10 @@ public class GolemAi extends Goal {
         if (golem.getBuilding().getColony().getRaiderManager().isRaided()) {
             return true;
         }
-        EntityNavigationUtils.walkToPos(this.golem, this.golem.getBuilding().getPosition().east(), 1, true, 1);
+        BlockPos position = this.golem.getBuilding().getPosition(golem);
+        if (position != null) {
+            EntityNavigationUtils.walkToPos(this.golem, position, 1, true, 0.7);
+        }
         return true;
     }
 

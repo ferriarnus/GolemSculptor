@@ -1,21 +1,18 @@
 package dev.ferriarnus.golemsculpter.building;
 
-import com.minecolonies.api.colony.ICitizenData;
 import com.minecolonies.api.colony.IColonyManager;
 import com.minecolonies.api.colony.IColonyView;
 import com.minecolonies.api.colony.buildings.IGuardBuilding;
 import com.minecolonies.api.colony.requestsystem.location.ILocation;
-import com.minecolonies.api.entity.ai.statemachine.AIOneTimeEventTarget;
-import com.minecolonies.api.entity.ai.statemachine.states.AIWorkerState;
 import com.minecolonies.api.entity.citizen.AbstractEntityCitizen;
 import com.minecolonies.api.research.util.ResearchConstants;
 import com.minecolonies.api.util.MessageUtils;
 import com.minecolonies.core.colony.buildings.AbstractBuilding;
 import com.minecolonies.core.colony.buildings.AbstractBuildingGuards;
-import com.minecolonies.core.colony.jobs.AbstractJobGuard;
 import com.minecolonies.core.colony.requestsystem.locations.EntityLocation;
 import com.minecolonies.core.colony.requestsystem.locations.StaticLocation;
 import com.minecolonies.core.items.ItemBannerRallyGuards;
+import com.minecolonies.core.util.AttributeModifierUtils;
 import com.minecolonies.core.util.ServerUtils;
 import dev.ferriarnus.golemsculpter.entity.SculptedGolemEntity;
 import dev.ferriarnus.golemsculpter.entity.GolemType;
@@ -25,6 +22,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
@@ -32,15 +31,29 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
-import static com.minecolonies.core.colony.buildings.AbstractBuildingGuards.GUARD_TASK;
+import static com.minecolonies.api.util.constant.CitizenConstants.GUARD_HEALTH_MOD_BUILDING_NAME;
 
 public class BuildingSculptor extends AbstractBuilding implements IGuardBuilding {
+
+    public static final String GOLEM_SCULPTOR = "golem_sculptor";
+
+    private static final String TAG_ALOCATION = "andesite";
+    private static final String TAG_GLOCATION = "granite";
+    private static final String TAG_QLOCATION = "quartz";
+    private static final String TAG_PLOCATION = "prismarine";
+    private static final String TAG_OLOCATION = "obsidian";
 
     private UUID followPlayerUUID;
     private ILocation rallyLocation;
     private BlockPos guardPos = this.getID();
 
-    private SculptedGolemEntity[] golems = new SculptedGolemEntity[5];
+    private BlockPos aPos = null;
+    private BlockPos gPos = null;
+    private BlockPos qPos = null;
+    private BlockPos pPos = null;
+    private BlockPos oPos = null;
+
+    private final SculptedGolemEntity[] golems = new SculptedGolemEntity[5];
 
     protected BuildingSculptor(@NotNull IColony colony, BlockPos pos) {
         super(colony, pos);
@@ -48,7 +61,7 @@ public class BuildingSculptor extends AbstractBuilding implements IGuardBuilding
 
     @Override
     public String getSchematicName() {
-        return "sculptor";
+        return GOLEM_SCULPTOR;
     }
 
     public boolean addGolem(SculptedGolemEntity entity) {
@@ -60,9 +73,6 @@ public class BuildingSculptor extends AbstractBuilding implements IGuardBuilding
     }
 
     public void removeGolem(SculptedGolemEntity entity) {
-        if (entity.getGolemType() == null) {
-            return;
-        }
         if (golems[entity.getGolemType().ordinal()] == entity) {
             golems[entity.getGolemType().ordinal()] = null;
         }
@@ -76,11 +86,24 @@ public class BuildingSculptor extends AbstractBuilding implements IGuardBuilding
     public void deserializeNBT(HolderLookup.Provider provider, CompoundTag compound) {
         super.deserializeNBT(provider, compound);
 
+        aPos = BlockPosUtil.readOrNull(compound, TAG_ALOCATION);
+        gPos = BlockPosUtil.readOrNull(compound, TAG_GLOCATION);
+        qPos = BlockPosUtil.readOrNull(compound, TAG_QLOCATION);
+        pPos = BlockPosUtil.readOrNull(compound, TAG_PLOCATION);
+        oPos = BlockPosUtil.readOrNull(compound, TAG_OLOCATION);
     }
 
     @Override
     public CompoundTag serializeNBT(HolderLookup.Provider provider) {
-        return super.serializeNBT(provider);
+        final CompoundTag compound = super.serializeNBT(provider);
+
+        BlockPosUtil.writeOptional(compound, TAG_ALOCATION, aPos);
+        BlockPosUtil.writeOptional(compound, TAG_GLOCATION, gPos);
+        BlockPosUtil.writeOptional(compound, TAG_QLOCATION, qPos);
+        BlockPosUtil.writeOptional(compound, TAG_PLOCATION, oPos);
+        BlockPosUtil.writeOptional(compound, TAG_OLOCATION, pPos);
+
+        return compound;
     }
 
     @Override
@@ -111,13 +134,87 @@ public class BuildingSculptor extends AbstractBuilding implements IGuardBuilding
         return null;
     }
 
+    @Nullable
+    public BlockPos getPosition(SculptedGolemEntity golem) {
+        BlockPos pos = switch (golem.getGolemType()) {
+            case ANDESITE -> aPos;
+            case GRANITE -> gPos;
+            case QUARTZ -> qPos;
+            case PRISMARINE -> pPos;
+            case OBSIDIAN -> oPos;
+        };
+        if (pos == null) {
+            loadPos();
+        }
+        return pos;
+    }
+
+    private void loadPos() {
+        if (tileEntity == null) {
+            return;
+        }
+        final Map<String, Set<BlockPos>> map = tileEntity.getWorldTagNamePosMap();
+        final Set<BlockPos> andesitePos = map.getOrDefault(TAG_ALOCATION, new HashSet<>());
+        final Set<BlockPos> granitePos = map.getOrDefault(TAG_GLOCATION, new HashSet<>());
+        final Set<BlockPos> quartzPos = map.getOrDefault(TAG_QLOCATION, new HashSet<>());
+        final Set<BlockPos> prismarinePos = map.getOrDefault(TAG_PLOCATION, new HashSet<>());
+        final Set<BlockPos> obsidianPos = map.getOrDefault(TAG_OLOCATION, new HashSet<>());
+
+        if (!andesitePos.isEmpty()) {
+            aPos = andesitePos.iterator().next();
+        }
+        if (!granitePos.isEmpty()) {
+            gPos = granitePos.iterator().next();
+        }
+        if (!quartzPos.isEmpty()) {
+            qPos = quartzPos.iterator().next();
+        }
+        if (!prismarinePos.isEmpty()) {
+            pPos = prismarinePos.iterator().next();
+        }
+        if (!obsidianPos.isEmpty()) {
+            oPos = obsidianPos.iterator().next();
+        }
+    }
+
+    public double getBonusHealth() {
+        return 0.0D;
+    }
+
+    public float getAttackDamage() {
+        return 2.0F;
+    }
+
+    @Override
+    public void onUpgradeComplete(int newLevel) {
+        for (SculptedGolemEntity golem : golems) {
+            if (golem != null) {
+                final AttributeModifier healthModBuildingHP = new AttributeModifier(GUARD_HEALTH_MOD_BUILDING_NAME, getBonusHealth(), AttributeModifier.Operation.ADD_VALUE);
+                AttributeModifierUtils.addHealthModifier(golem, healthModBuildingHP);
+            }
+        }
+
+        super.onUpgradeComplete(newLevel);
+    }
+
+    @Override
+    public void onDestroyed() {
+        for (SculptedGolemEntity golem : golems) {
+            if (golem != null) {
+                golem.remove(Entity.RemovalReason.DISCARDED);
+            }
+        }
+        super.onDestroyed();
+    }
+
     @Override
     public String getTask() {
         return "Golem";
     }
 
+    @Nullable
     @Override
-    public @Nullable BlockPos getNextPatrolTarget(boolean b) {
+    public BlockPos getNextPatrolTarget(boolean b) {
         return null;
     }
 
@@ -161,20 +258,13 @@ public class BuildingSculptor extends AbstractBuilding implements IGuardBuilding
         if (this.rallyLocation != null && this.rallyLocation instanceof EntityLocation entityLocation) {
             return entityLocation.getPlayerEntity();
         } else {
-            return this.getTask().equals("com.minecolonies.core.guard.setting.follow") ? ServerUtils.getPlayerFromUUID(this.followPlayerUUID, this.colony.getWorld()) : null;
+            return null;
         }
     }
 
     @Override
     public void setPlayerToFollow(Player player) {
         this.followPlayerUUID = player.getUUID();
-        //TODO link to golems
-        for (ICitizenData iCitizenData : this.getAllAssignedCitizen()) {
-            AbstractJobGuard<?> job = iCitizenData.getJob(AbstractJobGuard.class);
-            if (job != null && job.getWorkerAI() != null) {
-                job.getWorkerAI().registerTarget(new AIOneTimeEventTarget<>(AIWorkerState.PREPARING));
-            }
-        }
     }
 
     @Override
@@ -194,7 +284,7 @@ public class BuildingSculptor extends AbstractBuilding implements IGuardBuilding
                     this.setRallyLocation(null);
                     return null;
                 } else if (outOfRange) {
-                    MessageUtils.format("item.minecolonies.banner_rally_guards.outofrange").sendTo(new Player[]{player});
+                    MessageUtils.format("item.minecolonies.banner_rally_guards.outofrange").sendTo(player);
                     this.setRallyLocation(null);
                     return null;
                 } else {
@@ -221,16 +311,7 @@ public class BuildingSculptor extends AbstractBuilding implements IGuardBuilding
 
     @Override
     public void setRallyLocation(ILocation location) {
-        boolean reduceSaturation = this.rallyLocation != null && location == null;
-
         this.rallyLocation = location;
-
-        //TODO link to golems
-        for (ICitizenData iCitizenData : this.getAllAssignedCitizen()) {
-            if (reduceSaturation && iCitizenData.getSaturation() < 6.0) {
-                iCitizenData.decreaseSaturation(6.0);
-            }
-        }
     }
 
     @Override
