@@ -32,7 +32,6 @@ import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.NotNull;
 
 import static com.minecolonies.core.entity.ai.minimal.EntityAIInteractToggleAble.*;
-import static dev.ferriarnus.golemsculptor.building.BuildingSculptor.GOLEM_ARMOUR_MOD_BUILDING_NAME;
 import static dev.ferriarnus.golemsculptor.building.BuildingSculptor.GOLEM_HEALTH_MOD_BUILDING_NAME;
 
 public class SculptedGolemEntity extends AbstractFastMinecoloniesEntity {
@@ -143,7 +142,7 @@ public class SculptedGolemEntity extends AbstractFastMinecoloniesEntity {
 
     @Override
     public int getArmorValue() {
-        return (int) (super.getArmorValue() + 4 + getBuilding().getColony().getResearchManager().getResearchEffects().getEffectStrength(GolemResearchProvider.REINFORCED));
+        return (int) (super.getArmorValue() + getBuilding().getColony().getResearchManager().getResearchEffects().getEffectStrength(GolemResearchProvider.REINFORCED));
     }
 
     @Override
@@ -205,8 +204,9 @@ public class SculptedGolemEntity extends AbstractFastMinecoloniesEntity {
 
     public static AttributeSupplier.Builder getDefaultAttributes() {
         return LivingEntity.createLivingAttributes()
-                .add(Attributes.ATTACK_DAMAGE, Attributes.ATTACK_DAMAGE.value().getDefaultValue())
+                .add(Attributes.ATTACK_DAMAGE, 1.0)
                 .add(Attributes.FOLLOW_RANGE, 100.0)
-                .add(Attributes.ATTACK_KNOCKBACK, 2.0);
+                .add(Attributes.ARMOR_TOUGHNESS, 4.0)
+                .add(Attributes.ARMOR, 4.0);
     }
 }

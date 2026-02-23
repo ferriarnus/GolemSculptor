@@ -37,7 +37,6 @@ import java.util.*;
 public class BuildingSculptor extends AbstractBuilding implements IGuardBuilding {
 
     public static final ResourceLocation GOLEM_HEALTH_MOD_BUILDING_NAME = ResourceLocation.fromNamespaceAndPath(GolemSculptor.MODID, "golembuildinghp");
-    public static final ResourceLocation GOLEM_ARMOUR_MOD_BUILDING_NAME = ResourceLocation.fromNamespaceAndPath(GolemSculptor.MODID, "golembuildingarmour");
 
     public static final String GOLEM_SCULPTOR = "golem_sculptor";
 
