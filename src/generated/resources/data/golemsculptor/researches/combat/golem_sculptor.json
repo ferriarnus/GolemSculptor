@@ -1,0 +1,35 @@
+{
+  "branch": "minecolonies:combat",
+  "costs": [
+    {
+      "count": 1,
+      "item": "minecraft:enchanted_book"
+    },
+    {
+      "count": 1,
+      "item": "minecraft:jack_o_lantern"
+    }
+  ],
+  "effects": [
+    {
+      "id": "golemsculptor:effects/golem_sculptor",
+      "level": 1
+    }
+  ],
+  "exclusiveChildResearch": true,
+  "icon": "golemsculptor:golem_sculptor",
+  "requirements": [
+    {
+      "type": "minecolonies:building",
+      "building": "minecolonies:stonemason",
+      "level": 1
+    },
+    {
+      "type": "minecolonies:building",
+      "building": "minecolonies:enchanter",
+      "level": 1
+    }
+  ],
+  "researchLevel": 1,
+  "subtitle": "com.golemsculptor.research.combat.golem_sculptor.subtitle"
+}

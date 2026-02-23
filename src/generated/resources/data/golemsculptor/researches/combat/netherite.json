@@ -1,0 +1,26 @@
+{
+  "branch": "minecolonies:combat",
+  "costs": [
+    {
+      "count": 2,
+      "item": "minecraft:netherite_block"
+    }
+  ],
+  "effects": [
+    {
+      "id": "golemsculptor:effects/reinforced",
+      "level": 5
+    }
+  ],
+  "icon": "golemsculptor:golem_sculptor",
+  "parentResearch": "golemsculptor:combat/obsidian",
+  "requirements": [
+    {
+      "type": "minecolonies:building",
+      "building": "golemsculptor:golem_sculptor",
+      "level": 5
+    }
+  ],
+  "researchLevel": 6,
+  "subtitle": "com.golemsculptor.research.combat.netherite.subtitle"
+}

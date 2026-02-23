@@ -1,0 +1,26 @@
+{
+  "branch": "minecolonies:combat",
+  "costs": [
+    {
+      "count": 8,
+      "item": "minecraft:piston"
+    }
+  ],
+  "effects": [
+    {
+      "id": "golemsculptor:effects/knockback",
+      "level": 3
+    }
+  ],
+  "icon": "golemsculptor:golem_sculptor",
+  "parentResearch": "golemsculptor:combat/knockback2",
+  "requirements": [
+    {
+      "type": "minecolonies:building",
+      "building": "golemsculptor:golem_sculptor",
+      "level": 3
+    }
+  ],
+  "researchLevel": 4,
+  "subtitle": "com.golemsculptor.research.combat.knockback3.subtitle"
+}
