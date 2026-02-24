@@ -1,0 +1,20 @@
+{
+  "variants": {
+    "facing=east": {
+      "model": "golemsculptor:block/golem_sculptor",
+      "y": 0
+    },
+    "facing=south": {
+      "model": "golemsculptor:block/golem_sculptor",
+      "y": 90
+    },
+    "facing=west": {
+      "model": "golemsculptor:block/golem_sculptor",
+      "y": 180
+    },
+    "facing=north": {
+      "model": "golemsculptor:block/golem_sculptor",
+      "y": 270
+    }
+  }
+}

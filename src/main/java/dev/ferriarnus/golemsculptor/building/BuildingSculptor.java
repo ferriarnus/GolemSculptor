@@ -72,6 +72,7 @@ public class BuildingSculptor extends AbstractBuilding implements IGuardBuilding
             golems[entity.getGolemType().ordinal()] = entity;
             return true;
         }
+
         return false;
     }
 
@@ -82,7 +83,12 @@ public class BuildingSculptor extends AbstractBuilding implements IGuardBuilding
     }
 
     public List<ItemStack> getGolemItems(GolemType type) {
-        return List.of(new ItemStack(type.main, 6), new ItemStack(type.repair, 6));
+        return List.of(new ItemStack(type.main, 6), new ItemStack(type.repair, 4));
+    }
+
+    @Nullable
+    public SculptedGolemEntity getGolem(GolemType type) {
+        return golems[type.ordinal()];
     }
 
     @Override
@@ -121,19 +127,32 @@ public class BuildingSculptor extends AbstractBuilding implements IGuardBuilding
     public GolemType canMakeGolem() {
         if (golems[0] == null) {
             return GolemType.ANDESITE;
-        }
-        if (golems[1] == null && this.getBuildingLevel() > 1) {
+        } else if (golems[1] == null && this.getBuildingLevel() > 1) {
             return GolemType.GRANITE;
-        }
-        if (golems[2] == null && this.getBuildingLevel() > 2) {
+        } else if (golems[2] == null && this.getBuildingLevel() > 2) {
             return GolemType.QUARTZ;
-        }
-        if (golems[3] == null && this.getBuildingLevel() > 3) {
+        } else if (golems[3] == null && this.getBuildingLevel() > 3) {
             return GolemType.PRISMARINE;
-        }
-        if (golems[4] == null && this.getBuildingLevel() > 4) {
+        } else if (golems[4] == null && this.getBuildingLevel() > 4) {
             return GolemType.OBSIDIAN;
         }
+
+        return null;
+    }
+
+    @Nullable
+    public GolemType canRepair() {
+        for (SculptedGolemEntity golem : golems) {
+            if (golem == null) {
+                continue;
+            }
+
+            float hp = golem.getHealth()  / golem.getMaxHealth();
+            if (hp < 0.75f) {
+                return golem.getGolemType();
+            }
+        }
+
         return null;
     }
 
@@ -146,9 +165,11 @@ public class BuildingSculptor extends AbstractBuilding implements IGuardBuilding
             case PRISMARINE -> pPos;
             case OBSIDIAN -> oPos;
         };
+
         if (pos == null) {
             loadPos();
         }
+
         return pos;
     }
 
@@ -156,6 +177,7 @@ public class BuildingSculptor extends AbstractBuilding implements IGuardBuilding
         if (tileEntity == null) {
             return;
         }
+
         final Map<String, Set<BlockPos>> map = tileEntity.getWorldTagNamePosMap();
         final Set<BlockPos> andesitePos = map.getOrDefault(TAG_ALOCATION, new HashSet<>());
         final Set<BlockPos> granitePos = map.getOrDefault(TAG_GLOCATION, new HashSet<>());
@@ -166,15 +188,19 @@ public class BuildingSculptor extends AbstractBuilding implements IGuardBuilding
         if (!andesitePos.isEmpty()) {
             aPos = andesitePos.iterator().next();
         }
+
         if (!granitePos.isEmpty()) {
             gPos = granitePos.iterator().next();
         }
+
         if (!quartzPos.isEmpty()) {
             qPos = quartzPos.iterator().next();
         }
+
         if (!prismarinePos.isEmpty()) {
             pPos = prismarinePos.iterator().next();
         }
+
         if (!obsidianPos.isEmpty()) {
             oPos = obsidianPos.iterator().next();
         }
@@ -207,6 +233,7 @@ public class BuildingSculptor extends AbstractBuilding implements IGuardBuilding
                 golem.remove(Entity.RemovalReason.DISCARDED);
             }
         }
+
         super.onDestroyed();
     }
 

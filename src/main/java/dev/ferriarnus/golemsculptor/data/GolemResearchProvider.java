@@ -20,7 +20,6 @@ public class GolemResearchProvider extends AbstractResearchProvider {
     private static final ResourceLocation COMBAT   = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "combat");
 
     public static final ResourceLocation REINFORCED = ResourceLocation.fromNamespaceAndPath(GolemSculptor.MODID, "effects/reinforced");
-
     public static final ResourceLocation KNOCKBACK = ResourceLocation.fromNamespaceAndPath(GolemSculptor.MODID, "effects/knockback");
 
     public GolemResearchProvider(@NotNull PackOutput packOutput, @NotNull CompletableFuture<HolderLookup.Provider> provider) {
@@ -40,7 +39,7 @@ public class GolemResearchProvider extends AbstractResearchProvider {
 
         effects.add(new ResearchEffect(KNOCKBACK).setTranslatedName("Golem Knockback +1").setLevels(new double[] {1.0, 2.0, 3.0, 4.0, 5.0}));
 
-        effects.add(new ResearchEffect(BuildingRegistry.GOLEM_SCULPTOR.get().getBuildingBlock()).setTranslatedName("Unlocks Golem Sculpter").setLevels(new double[] {5}));
+        effects.add(new ResearchEffect(BuildingRegistry.GOLEM_SCULPTOR.get().getBuildingBlock()).setTranslatedName("Unlocks Golem Sculptor").setLevels(new double[] {5}));
         return effects;
     }
 
@@ -48,7 +47,7 @@ public class GolemResearchProvider extends AbstractResearchProvider {
     protected Collection<Research> getResearchCollection() {
         List<Research> researches = new ArrayList<>();
 
-        Research golemsculpter = new Research(ResourceLocation.fromNamespaceAndPath(GolemSculptor.MODID, "combat/golem_sculptor"), COMBAT)
+        Research golemsculptor = new Research(ResourceLocation.fromNamespaceAndPath(GolemSculptor.MODID, "combat/golem_sculptor"), COMBAT)
                 .setTranslatedName("Reinforcements")
                 .setTranslatedSubtitle("You have been summoned")
                 .setOnlyChild()
@@ -64,7 +63,7 @@ public class GolemResearchProvider extends AbstractResearchProvider {
                 .setTranslatedName("Reinforced")
                 .setTranslatedSubtitle("Sturdier")
                 .setIcon(BlockRegistry.GOLEM_SCULPTOR.asItem())
-                .setParentResearch(golemsculpter)
+                .setParentResearch(golemsculptor)
                 .addBuildingRequirement(BuildingRegistry.GOLEM_SCULPTOR.getId(),1)
                 .addItemCost(Items.STONE_BRICKS, 64, provider)
                 .addEffect(REINFORCED, 1)
@@ -114,7 +113,7 @@ public class GolemResearchProvider extends AbstractResearchProvider {
                 .setTranslatedName("Don't push me")
                 .setTranslatedSubtitle("Cause I'm close to the edge")
                 .setIcon(BlockRegistry.GOLEM_SCULPTOR.asItem())
-                .setParentResearch(golemsculpter)
+                .setParentResearch(golemsculptor)
                 .addBuildingRequirement(BuildingRegistry.GOLEM_SCULPTOR.getId(),1)
                 .addItemCost(Items.PISTON, 1, provider)
                 .addEffect(KNOCKBACK, 1)

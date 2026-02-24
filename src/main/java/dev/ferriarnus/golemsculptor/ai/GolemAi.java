@@ -83,6 +83,7 @@ public class GolemAi extends Goal {
                         threatTableEntity.getThreatTable().addThreat(this.golem, 5);
                     }
                 }
+
                 this.attacktimer = 5;
             } else if (distance > 50) {
                 this.golem.setTarget(null);
@@ -103,6 +104,7 @@ public class GolemAi extends Goal {
         if (!golem.getBuilding().getColony().getRaiderManager().isRaided()) {
             return true;
         }
+
         if (golem.getBuilding().getRallyLocation() != null) {
             EntityNavigationUtils.walkToPos(golem, golem.getBuilding().getRallyLocation().getInDimensionLocation().
                     offset(this.randomGenerator.nextInt(6) - 3, 0, this.randomGenerator.nextInt(6) - 3), 6, false, 1);
@@ -116,10 +118,12 @@ public class GolemAi extends Goal {
         if (golem.getBuilding().getColony().getRaiderManager().isRaided()) {
             return true;
         }
+
         BlockPos position = this.golem.getBuilding().getPosition(golem);
         if (position != null) {
             EntityNavigationUtils.walkToPos(this.golem, position, 1, true, 0.7);
         }
+
         return true;
     }
 

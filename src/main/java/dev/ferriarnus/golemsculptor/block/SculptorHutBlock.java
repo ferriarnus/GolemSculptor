@@ -14,7 +14,7 @@ import org.jetbrains.annotations.Nullable;
 public class SculptorHutBlock extends AbstractBlockHut<SculptorHutBlock> {
     @Override
     public String getHutName() {
-        return "sculptor";
+        return "golem_sculptor";
     }
 
     @Override

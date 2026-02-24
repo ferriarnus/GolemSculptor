@@ -45,6 +45,5 @@ public class GolemSculptor {
         final CompletableFuture<HolderLookup.Provider> provider = enchRegProvider.getRegistryProvider().thenApply(p -> new DatagenLootTableManager(p, event.getExistingFileHelper()));
 
         generator.addProvider(event.includeServer(), new GolemResearchProvider(generator.getPackOutput(), provider));
-
     }
 }

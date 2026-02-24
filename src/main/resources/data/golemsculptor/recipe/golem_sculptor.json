@@ -1,0 +1,25 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "J": {
+      "item": "minecraft:jack_o_lantern"
+    },
+    "T": {
+      "item": "structurize:sceptergold"
+    },
+    "X": {
+      "tag": "minecraft:planks"
+    }
+  },
+  "pattern": [
+    "XTX",
+    "XJX",
+    "XXX"
+  ],
+  "result": {
+    "count": 1,
+    "id": "golemsculptor:golem_sculptor"
+  },
+  "show_notification": true
+}

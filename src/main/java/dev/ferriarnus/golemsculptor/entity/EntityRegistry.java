@@ -17,12 +17,12 @@ public class EntityRegistry {
         ENTITY_TYPES.register(bus);
     }
 
-    public static final DeferredHolder<EntityType<?>,EntityType<SculptedGolemEntity>> GOLEM = ENTITY_TYPES
-            .register("golem", () -> EntityType.Builder.of(SculptedGolemEntity::new, MobCategory.MISC)
+    public static final DeferredHolder<EntityType<?>,EntityType<SculptedGolemEntity>> SCULPTED_GOLEM = ENTITY_TYPES
+            .register("sculpted_golem", () -> EntityType.Builder.of(SculptedGolemEntity::new, MobCategory.MISC)
                     .sized(0.6F, 1.8F)
                     .setTrackingRange(256)
                     .updateInterval(2)
                     .setShouldReceiveVelocityUpdates(true)
-                    .build("golem")
+                    .build("sculpted_golem")
             );
 }

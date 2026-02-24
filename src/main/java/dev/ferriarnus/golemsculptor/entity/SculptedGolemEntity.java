@@ -1,5 +1,6 @@
 package dev.ferriarnus.golemsculptor.entity;
 
+import com.minecolonies.api.colony.IColony;
 import com.minecolonies.api.entity.ai.statemachine.states.IState;
 import com.minecolonies.api.entity.ai.statemachine.tickratestatemachine.ITickRateStateMachine;
 import com.minecolonies.api.entity.ai.statemachine.tickratestatemachine.TickRateStateMachine;
@@ -18,6 +19,10 @@ import dev.ferriarnus.golemsculptor.ai.GolemAi;
 import dev.ferriarnus.golemsculptor.data.GolemResearchProvider;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -30,11 +35,15 @@ import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import static com.minecolonies.core.entity.ai.minimal.EntityAIInteractToggleAble.*;
 import static dev.ferriarnus.golemsculptor.building.BuildingSculptor.GOLEM_HEALTH_MOD_BUILDING_NAME;
 
 public class SculptedGolemEntity extends AbstractFastMinecoloniesEntity {
+
+    public static final EntityDataAccessor<Long> DATA_BUILDING_POS = SynchedEntityData.defineId(SculptedGolemEntity.class, EntityDataSerializers.LONG);
+    public static final EntityDataAccessor<Integer>  DATA_GOLEM_TYPE = SynchedEntityData.defineId(SculptedGolemEntity.class, EntityDataSerializers.INT);
 
     private static final double CITIZEN_SWIM_BONUS = 2.0;
 
@@ -45,6 +54,7 @@ public class SculptedGolemEntity extends AbstractFastMinecoloniesEntity {
     private GolemType type;
     private BuildingSculptor building;
     private long position;
+    private IColony colony;
 
     protected SculptedGolemEntity(EntityType<? extends PathfinderMob> type, Level worldIn) {
         super(type, worldIn);
@@ -73,12 +83,12 @@ public class SculptedGolemEntity extends AbstractFastMinecoloniesEntity {
             if (this.building != null) {
                 return false;
             }
+
             var entity = this.level().getBlockEntity(BlockPos.of(position));
             if (entity instanceof SculptorBlockEntity blockEntity && blockEntity.getBuilding() instanceof BuildingSculptor sculptor) {
                 this.building = sculptor;
                 return false;
             }
-
         }
         this.building.removeGolem(this);
         this.remove(RemovalReason.DISCARDED);
@@ -88,14 +98,17 @@ public class SculptedGolemEntity extends AbstractFastMinecoloniesEntity {
     private boolean isInitialized() {
         if (this.level() != null && this.isAlive() && !this.isInvisible()) {
             if (this.building != null) {
+                colony = building.getColony();
                 building.addGolem(this);
                 AttributeModifierUtils.addHealthModifier(this,
                         new AttributeModifier(GOLEM_HEALTH_MOD_BUILDING_NAME, building.getBonusHealth(), AttributeModifier.Operation.ADD_VALUE));
                 return true;
             }
+
             var entity = this.level().getBlockEntity(BlockPos.of(position));
             if (entity instanceof SculptorBlockEntity blockEntity && blockEntity.getBuilding() instanceof BuildingSculptor sculptor) {
                 this.building = sculptor;
+                colony = building.getColony();
                 building.addGolem(this);
                 AttributeModifierUtils.addHealthModifier(this,
                         new AttributeModifier(GOLEM_HEALTH_MOD_BUILDING_NAME, building.getBonusHealth(), AttributeModifier.Operation.ADD_VALUE));
@@ -112,10 +125,23 @@ public class SculptedGolemEntity extends AbstractFastMinecoloniesEntity {
     public void setBuilding(BuildingSculptor building) {
         this.building = building;
         this.position = building.getPosition().asLong();
+        this.getEntityData().set(DATA_BUILDING_POS, position);
+        this.getEntityData().isDirty();
     }
 
     public BuildingSculptor getBuilding() {
         return building;
+    }
+
+    public IColony getColony() {
+        if (colony == null && level().isClientSide) {
+            var entity = this.level().getBlockEntity(BlockPos.of(position));
+            if (entity instanceof SculptorBlockEntity blockEntity) {
+                colony = blockEntity.getColony();
+            }
+        }
+
+        return colony;
     }
 
     public GolemType getGolemType() {
@@ -124,11 +150,18 @@ public class SculptedGolemEntity extends AbstractFastMinecoloniesEntity {
 
     public void setGolemType(GolemType type) {
         this.type = type;
+        this.getEntityData().set(DATA_GOLEM_TYPE, type.ordinal());
+        this.getEntityData().isDirty();
+    }
+
+    @Override
+    public @Nullable Component getCustomName() {
+        return Component.translatable("entity.golemsculptor.sculpted_golem.name", type.main.getDefaultInstance().getHoverName());
     }
 
     @Override
     public int getTeamId() {
-        return building.getColony().getID();
+        return getColony().getID();
     }
 
     @Override
@@ -142,12 +175,12 @@ public class SculptedGolemEntity extends AbstractFastMinecoloniesEntity {
 
     @Override
     public int getArmorValue() {
-        return (int) (super.getArmorValue() + getBuilding().getColony().getResearchManager().getResearchEffects().getEffectStrength(GolemResearchProvider.REINFORCED));
+        return (int) (super.getArmorValue() + this.getColony().getResearchManager().getResearchEffects().getEffectStrength(GolemResearchProvider.REINFORCED));
     }
 
     @Override
     protected float getKnockback(Entity attacker, DamageSource damageSource) {
-        return (float) (super.getKnockback(attacker, damageSource) + getBuilding().getColony().getResearchManager().getResearchEffects().getEffectStrength(GolemResearchProvider.KNOCKBACK));
+        return (float) (super.getKnockback(attacker, damageSource) + this.getColony().getResearchManager().getResearchEffects().getEffectStrength(GolemResearchProvider.KNOCKBACK));
     }
 
     @Override
@@ -155,6 +188,7 @@ public class SculptedGolemEntity extends AbstractFastMinecoloniesEntity {
         if (building != null) {
             building.removeGolem(this);
         }
+
         super.remove(reason);
     }
 
@@ -185,6 +219,28 @@ public class SculptedGolemEntity extends AbstractFastMinecoloniesEntity {
         this.position = compound.getLong("position");
         this.type = GolemType.values()[compound.getInt("type")];
         super.readAdditionalSaveData(compound);
+        this.getEntityData().set(DATA_GOLEM_TYPE, type.ordinal());
+        this.getEntityData().set(DATA_BUILDING_POS, position);
+        this.getEntityData().isDirty();
+    }
+
+    @Override
+    protected void defineSynchedData(SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(DATA_BUILDING_POS, this.position);
+        builder.define(DATA_GOLEM_TYPE, this.type == null ? -1 : this.type.ordinal());
+    }
+
+    @Override
+    public void onSyncedDataUpdated(EntityDataAccessor<?> key) {
+        super.onSyncedDataUpdated(key);
+        if (this.level().isClientSide) {
+            if (DATA_BUILDING_POS.equals(key)) {
+                this.position = this.getEntityData().get(DATA_BUILDING_POS);
+            } else if (DATA_GOLEM_TYPE.equals(key)) {
+                this.type = this.getEntityData().get(DATA_GOLEM_TYPE) == -1 ? null : GolemType.values()[this.getEntityData().get(DATA_GOLEM_TYPE)];
+            }
+        }
     }
 
     @NotNull

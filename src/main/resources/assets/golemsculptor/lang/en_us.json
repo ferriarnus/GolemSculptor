@@ -1,14 +1,17 @@
 {
-  "block.golemsculptor.golem_sculptor" : "Golem Sculpter's Hut",
-  "block.golemsculptor.golem_sculptor.name" : "Golem Sculpter's Hut",
+  "block.golemsculptor.golem_sculptor" : "Golem Sculptor's Hut",
+  "block.golemsculptor.golem_sculptor.name" : "Golem Sculptor's Hut",
 
-  "itemGroup.golem_sculpter": "Golem Sculpter",
+  "entity.golemsculptor.sculpted_golem": "Sculpted Golem",
+  "entity.golemsculptor.sculpted_golem.name": "%s Golem",
 
-  "com.golemsculptor.building.golem_sculptor": "Golem Sculpter's Hut",
-  "com.minecolonies.building.golem_sculptor": "Golem Sculpter's Hut",
+  "itemGroup.golem_sculptor": "Golem Sculptor",
+
+  "com.golemsculptor.building.golem_sculptor": "Golem Sculptor's Hut",
+  "com.minecolonies.building.golem_sculptor": "Golem Sculptor's Hut",
   "com.golemsculptor.building.golem_sculptor.desc": "Creates golems to defend the colony.",
 
-  "com.golemsculptor.job.golem_sculpter": "Golem Sculpter",
+  "com.golemsculptor.job.golem_sculptor": "Golem Sculptor",
   "golemsculptor:golemsculptor.job.desc": "Creates golems to defend the colony.",
 
   "com.golemsculptor.research.combat.deepslate.name": "Compressed",
@@ -33,7 +36,7 @@
   "com.golemsculptor.research.combat.obsidian.subtitle": "Sculpted to perfection",
   "com.golemsculptor.research.combat.reinforced.name": "Reinforced",
   "com.golemsculptor.research.combat.reinforced.subtitle": "Sturdier",
-  "com.golemsculptor.research.effects.golem_sculptor.description": "Unlocks Golem Sculpter",
+  "com.golemsculptor.research.effects.golem_sculptor.description": "Unlocks Golem Sculptor",
   "com.golemsculptor.research.effects.knockback.description": "Golem Knockback +1",
   "com.golemsculptor.research.effects.reinforced.description": "Golem Armor +3"
 }
