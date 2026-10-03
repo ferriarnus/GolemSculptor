@@ -1,5 +1,6 @@
 package dev.ferriarnus.golemsculptor.building;
 
+import com.ldtteam.structurize.blueprints.v1.Blueprint;
 import com.minecolonies.api.colony.IColonyManager;
 import com.minecolonies.api.colony.IColonyView;
 import com.minecolonies.api.colony.buildings.IGuardBuilding;
@@ -26,6 +27,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
@@ -37,6 +39,7 @@ import java.util.*;
 public class BuildingSculptor extends AbstractBuilding implements IGuardBuilding {
 
     public static final ResourceLocation GOLEM_HEALTH_MOD_BUILDING_NAME = ResourceLocation.fromNamespaceAndPath(GolemSculptor.MODID, "golembuildinghp");
+    public static final ResourceLocation GOLEM_ARMOR_TOUGHNESS_MOD_BUILDING_NAME = ResourceLocation.fromNamespaceAndPath(GolemSculptor.MODID, "golembuildingarmortoughness");
 
     public static final String GOLEM_SCULPTOR = "golem_sculptor";
 
@@ -214,16 +217,22 @@ public class BuildingSculptor extends AbstractBuilding implements IGuardBuilding
         return 2.0F;
     }
 
+    public double getBonusArmorToughness() {
+        return getBuildingLevel() * 3;
+    }
+
     @Override
-    public void onUpgradeComplete(int newLevel) {
+    public void onUpgradeComplete(@Nullable Blueprint blueprint, int newLevel) {
         for (SculptedGolemEntity golem : golems) {
             if (golem != null) {
-                final AttributeModifier healthModBuildingHP = new AttributeModifier(GOLEM_HEALTH_MOD_BUILDING_NAME, getBonusHealth(), AttributeModifier.Operation.ADD_VALUE);
-                AttributeModifierUtils.addHealthModifier(golem, healthModBuildingHP);
+                final AttributeModifier health = new AttributeModifier(GOLEM_HEALTH_MOD_BUILDING_NAME, getBonusHealth(), AttributeModifier.Operation.ADD_VALUE);
+                AttributeModifierUtils.addHealthModifier(golem, health);
+                final AttributeModifier armorToughness = new AttributeModifier(GOLEM_ARMOR_TOUGHNESS_MOD_BUILDING_NAME, getBonusArmorToughness(), AttributeModifier.Operation.ADD_VALUE);
+                AttributeModifierUtils.addModifier(golem, armorToughness, Attributes.ARMOR);
             }
         }
 
-        super.onUpgradeComplete(newLevel);
+        super.onUpgradeComplete(blueprint, newLevel);
     }
 
     @Override

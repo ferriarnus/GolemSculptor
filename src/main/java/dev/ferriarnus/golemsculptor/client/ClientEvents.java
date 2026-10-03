@@ -14,4 +14,9 @@ public class ClientEvents {
     static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerEntityRenderer(EntityRegistry.SCULPTED_GOLEM.get(), SculptedGolemRenderer::new);
     }
+
+    @SubscribeEvent
+    static void registerModelLayer(EntityRenderersEvent.RegisterLayerDefinitions event) {
+        //event.registerLayerDefinition(NewGolemModel.LAYER_LOCATION, NewGolemModel::createBodyLayer);
+    }
 }

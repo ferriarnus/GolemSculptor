@@ -26,6 +26,10 @@ repositories {
         name 'LDTTeam - Modding'
         url 'https://ldtteam.jfrog.io/ldtteam/modding/'
     }
+    maven {
+        name = 'GeckoLib'
+        url = 'https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/'
+    }
 }
 
 base {
@@ -119,17 +123,22 @@ configurations {
 }
 
 dependencies {
-    implementation "curse.maven:minecolonies-245506:7630825"
-    //compileOnly "curse.maven:minecolonies-245506:6379137"
-    implementation "curse.maven:blockui-522992:7387809"
-    implementation "curse.maven:domum-ornamentum-527361:7422835"
-    implementation "curse.maven:structurize-298744:7637703"
+    implementation "curse.maven:minecolonies-245506:9005398-javadoc-sources"
+    implementation "curse.maven:blockui-522992:8883780"
+    implementation "curse.maven:domum-ornamentum-527361:8784713"
+    implementation "curse.maven:structurize-298744:8829722"
     implementation "curse.maven:multi-piston-303278:7097877"
     implementation "curse.maven:towntalk-900364:5653504"
 
     implementation("com.ldtteam:datagenerators:1.20.4-0.1.57-ALPHA:universal"){
         transitive = false
     }
+
+    //Fix later?
+    //implementation "com.geckolib:geckolib-neoforge-${minecraft_version}:${geckolibVersion}"
+    //interfaceInjectionData "com.geckolib:geckolib-neoforge-${minecraft_version}:${geckolibVersion}"
+
+    implementation "curse.maven:geckolib-388172:8893490"
 
     implementation "curse.maven:jei-238222:7420587"
     implementation "curse.maven:jade-324717:7428884"

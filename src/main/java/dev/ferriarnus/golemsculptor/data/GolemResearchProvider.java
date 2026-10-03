@@ -20,7 +20,10 @@ public class GolemResearchProvider extends AbstractResearchProvider {
     private static final ResourceLocation COMBAT   = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "combat");
 
     public static final ResourceLocation REINFORCED = ResourceLocation.fromNamespaceAndPath(GolemSculptor.MODID, "effects/reinforced");
+    public static final ResourceLocation FALL = ResourceLocation.fromNamespaceAndPath(GolemSculptor.MODID, "effects/fall");
+    public static final ResourceLocation FIRE = ResourceLocation.fromNamespaceAndPath(GolemSculptor.MODID, "effects/fire");
     public static final ResourceLocation KNOCKBACK = ResourceLocation.fromNamespaceAndPath(GolemSculptor.MODID, "effects/knockback");
+    public static final ResourceLocation SLOWNESS = ResourceLocation.fromNamespaceAndPath(GolemSculptor.MODID, "effects/knockback");
 
     public GolemResearchProvider(@NotNull PackOutput packOutput, @NotNull CompletableFuture<HolderLookup.Provider> provider) {
         super(packOutput, provider);
@@ -37,9 +40,15 @@ public class GolemResearchProvider extends AbstractResearchProvider {
 
         effects.add(new ResearchEffect(REINFORCED).setTranslatedName("Golem Armor +3").setLevels(new double[] {3, 6, 10, 13, 16})); // +4 base armour
 
+        effects.add(new ResearchEffect(FALL).setTranslatedName("Golem ignores Fall damage"));
+
+        effects.add(new ResearchEffect(FIRE).setTranslatedName("Golem ignores Fire damage"));
+
         effects.add(new ResearchEffect(KNOCKBACK).setTranslatedName("Golem Knockback +1").setLevels(new double[] {1.0, 2.0, 3.0, 4.0, 5.0}));
 
-        effects.add(new ResearchEffect(BuildingRegistry.GOLEM_SCULPTOR.get().getBuildingBlock()).setTranslatedName("Unlocks Golem Sculptor").setLevels(new double[] {5}));
+        effects.add(new ResearchEffect(SLOWNESS).setTranslatedName("Golem Slowdown effect +1").setLevels(new double[] {1.0, 2.0}));
+
+        effects.add(new ResearchEffect(BuildingRegistry.GOLEM_SCULPTOR.get().getBuildingBlock()).setTranslatedName("Unlocks Golem Sculptor").setLevels(new double[] {5.0}));
         return effects;
     }
 
@@ -87,6 +96,7 @@ public class GolemResearchProvider extends AbstractResearchProvider {
                 .addBuildingRequirement(BuildingRegistry.GOLEM_SCULPTOR.getId(),3)
                 .addItemCost(Items.DEEPSLATE_BRICKS, 64, provider)
                 .addEffect(REINFORCED, 3)
+                .addEffect(FALL, 1)
                 .addToList(researches);
 
         Research obsidian = new Research(ResourceLocation.fromNamespaceAndPath(GolemSculptor.MODID, "combat/obsidian"), COMBAT)
@@ -107,6 +117,7 @@ public class GolemResearchProvider extends AbstractResearchProvider {
                 .addBuildingRequirement(BuildingRegistry.GOLEM_SCULPTOR.getId(),5)
                 .addItemCost(Items.NETHERITE_BLOCK, 2, provider)
                 .addEffect(REINFORCED, 5)
+                .addEffect(FIRE, 1)
                 .addToList(researches);
 
         Research knockback = new Research(ResourceLocation.fromNamespaceAndPath(GolemSculptor.MODID, "combat/knockback"), COMBAT)

@@ -8,10 +8,13 @@ import com.minecolonies.api.util.BlockPosUtil;
 import com.minecolonies.api.util.Log;
 import com.minecolonies.core.entity.pathfinding.navigation.EntityNavigationUtils;
 import com.minecolonies.core.entity.pathfinding.pathresults.PathResult;
+import dev.ferriarnus.golemsculptor.data.GolemResearchProvider;
 import dev.ferriarnus.golemsculptor.entity.SculptedGolemEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.Goal;
 
@@ -51,6 +54,7 @@ public class GolemAi extends Goal {
         //Don't attack allies
         if (this.golem.getTarget() != null && this.golem.getTarget().isAlive()) {
             this.golem.getTarget().setLastHurtByMob(this.golem);
+            this.golem.setResting(false);
             return true;
         } else {
             return false;
@@ -62,6 +66,7 @@ public class GolemAi extends Goal {
             return true;
         }
         if (this.golem.getTarget() != null && this.golem.getTarget().isAlive()) {
+            this.golem.setResting(false);
             if (this.attacktimer > 0) {
                 --this.attacktimer;
             }
@@ -70,12 +75,15 @@ public class GolemAi extends Goal {
                 EntityNavigationUtils.walkToPos(this.golem, this.golem.getTarget().blockPosition(), false);
                 this.golem.getLookControl().setLookAt(this.golem.getTarget());
             }
-
             int distance = BlockPosUtil.getMaxDistance2D(this.golem.blockPosition(), this.golem.getTarget().blockPosition());
             if (distance < 2 && this.attacktimer == 0) {
-                this.golem.swing(InteractionHand.MAIN_HAND);
+                this.golem.startAttack();
                 this.golem.playSound(SoundEvents.IRON_GOLEM_ATTACK, 0.55F, 1.0F);
                 this.golem.getTarget().hurt(this.golem.level().damageSources().mobAttack(this.golem), this.golem.getBuilding().getAttackDamage());
+                double strength = this.golem.getBuilding().getColony().getResearchManager().getResearchEffects().getEffectStrength(GolemResearchProvider.SLOWNESS);
+                if (strength > 0) {
+                    this.golem.getTarget().addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 40, (int) strength));
+                }
                 //Taunt
                 if (this.golem.getTarget() instanceof Mob mob) {
                     mob.setTarget(this.golem);
@@ -84,7 +92,7 @@ public class GolemAi extends Goal {
                     }
                 }
 
-                this.attacktimer = 5;
+                this.attacktimer = 12;
             } else if (distance > 50) {
                 this.golem.setTarget(null);
                 this.golem.getNavigation().stop();
@@ -106,6 +114,7 @@ public class GolemAi extends Goal {
         }
 
         if (golem.getBuilding().getRallyLocation() != null) {
+            this.golem.setResting(false);
             EntityNavigationUtils.walkToPos(golem, golem.getBuilding().getRallyLocation().getInDimensionLocation().
                     offset(this.randomGenerator.nextInt(6) - 3, 0, this.randomGenerator.nextInt(6) - 3), 6, false, 1);
             golem.getBuilding().getPositionToFollow();
@@ -122,6 +131,7 @@ public class GolemAi extends Goal {
         BlockPos position = this.golem.getBuilding().getPosition(golem);
         if (position != null) {
             EntityNavigationUtils.walkToPos(this.golem, position, 1, true, 0.7);
+            this.golem.setResting(position.closerToCenterThan(this.golem.position(), 1));
         }
 
         return true;

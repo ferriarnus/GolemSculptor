@@ -19,7 +19,8 @@ public class EntityRegistry {
 
     public static final DeferredHolder<EntityType<?>,EntityType<SculptedGolemEntity>> SCULPTED_GOLEM = ENTITY_TYPES
             .register("sculpted_golem", () -> EntityType.Builder.of(SculptedGolemEntity::new, MobCategory.MISC)
-                    .sized(0.6F, 1.8F)
+                    .sized(1.0F, 2.8F)
+                    .eyeHeight(2.6F)
                     .setTrackingRange(256)
                     .updateInterval(2)
                     .setShouldReceiveVelocityUpdates(true)

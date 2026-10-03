@@ -9,7 +9,6 @@ import com.minecolonies.api.entity.mobs.AbstractEntityMinecoloniesMonster;
 import com.minecolonies.api.entity.other.AbstractFastMinecoloniesEntity;
 import com.minecolonies.api.entity.pathfinding.registry.IPathNavigateRegistry;
 import com.minecolonies.api.util.Log;
-import com.minecolonies.core.entity.ai.minimal.EntityAIInteractToggleAble;
 import com.minecolonies.core.entity.pathfinding.navigation.AbstractAdvancedPathNavigate;
 import com.minecolonies.core.entity.pathfinding.navigation.PathingStuckHandler;
 import com.minecolonies.core.util.AttributeModifierUtils;
@@ -23,6 +22,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -34,16 +34,31 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.level.Level;
+import net.neoforged.neoforge.common.NeoForgeMod;
+import net.neoforged.neoforge.common.damagesource.DamageContainer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import software.bernie.geckolib.animatable.GeoEntity;
+import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
+import software.bernie.geckolib.animation.AnimatableManager;
+import software.bernie.geckolib.animation.AnimationController;
+import software.bernie.geckolib.animation.AnimationState;
+import software.bernie.geckolib.animation.PlayState;
+import software.bernie.geckolib.animation.RawAnimation;
+import software.bernie.geckolib.constant.DefaultAnimations;
+import software.bernie.geckolib.util.GeckoLibUtil;
 
-import static com.minecolonies.core.entity.ai.minimal.EntityAIInteractToggleAble.*;
 import static dev.ferriarnus.golemsculptor.building.BuildingSculptor.GOLEM_HEALTH_MOD_BUILDING_NAME;
+import static dev.ferriarnus.golemsculptor.building.BuildingSculptor.GOLEM_ARMOR_TOUGHNESS_MOD_BUILDING_NAME;
 
-public class SculptedGolemEntity extends AbstractFastMinecoloniesEntity {
+
+public class SculptedGolemEntity extends AbstractFastMinecoloniesEntity implements GeoEntity {
+    private final AnimatableInstanceCache geoCache = GeckoLibUtil.createInstanceCache(this);
+    protected static final RawAnimation DEACTIVATED = RawAnimation.begin().thenLoop("deactivated");
 
     public static final EntityDataAccessor<Long> DATA_BUILDING_POS = SynchedEntityData.defineId(SculptedGolemEntity.class, EntityDataSerializers.LONG);
-    public static final EntityDataAccessor<Integer>  DATA_GOLEM_TYPE = SynchedEntityData.defineId(SculptedGolemEntity.class, EntityDataSerializers.INT);
+    public static final EntityDataAccessor<Integer> DATA_GOLEM_TYPE = SynchedEntityData.defineId(SculptedGolemEntity.class, EntityDataSerializers.INT);
+    public static final EntityDataAccessor<Boolean> DATA_RESTING = SynchedEntityData.defineId(SculptedGolemEntity.class, EntityDataSerializers.BOOLEAN);
 
     private static final double CITIZEN_SWIM_BONUS = 2.0;
 
@@ -56,13 +71,17 @@ public class SculptedGolemEntity extends AbstractFastMinecoloniesEntity {
     private long position;
     private IColony colony;
 
+    private boolean resting;
+    private int attackAnimationTick;
+
     protected SculptedGolemEntity(EntityType<? extends PathfinderMob> type, Level worldIn) {
         super(type, worldIn);
 
         this.goalSelector.addGoal(0, new FloatGoal(this));
         this.goalSelector.addGoal(1, new GolemAi(this));
-        this.goalSelector.addGoal(4, new EntityAIInteractToggleAble(this, FENCE_TOGGLE, TRAP_TOGGLE, DOOR_TOGGLE));
-        this.targetSelector.addGoal(5, new NearestAttackableTargetGoal<>(this, AbstractEntityMinecoloniesMonster.class, 10, false, false, e -> true));
+        this.targetSelector.addGoal(5, new NearestAttackableTargetGoal<>(this,
+                AbstractEntityMinecoloniesMonster.class, 10, false, false,
+                e -> e instanceof AbstractEntityMinecoloniesMonster));
 
         setCustomNameVisible(true);
         this.setPersistenceRequired();
@@ -102,6 +121,8 @@ public class SculptedGolemEntity extends AbstractFastMinecoloniesEntity {
                 building.addGolem(this);
                 AttributeModifierUtils.addHealthModifier(this,
                         new AttributeModifier(GOLEM_HEALTH_MOD_BUILDING_NAME, building.getBonusHealth(), AttributeModifier.Operation.ADD_VALUE));
+                AttributeModifierUtils.addModifier(this,
+                        new AttributeModifier(GOLEM_ARMOR_TOUGHNESS_MOD_BUILDING_NAME, building.getBonusArmorToughness(), AttributeModifier.Operation.ADD_VALUE), Attributes.ARMOR);
                 return true;
             }
 
@@ -112,6 +133,8 @@ public class SculptedGolemEntity extends AbstractFastMinecoloniesEntity {
                 building.addGolem(this);
                 AttributeModifierUtils.addHealthModifier(this,
                         new AttributeModifier(GOLEM_HEALTH_MOD_BUILDING_NAME, building.getBonusHealth(), AttributeModifier.Operation.ADD_VALUE));
+                AttributeModifierUtils.addModifier(this,
+                        new AttributeModifier(GOLEM_ARMOR_TOUGHNESS_MOD_BUILDING_NAME, building.getBonusArmorToughness(), AttributeModifier.Operation.ADD_VALUE), Attributes.ARMOR);
                 return true;
             }
         }
@@ -154,6 +177,16 @@ public class SculptedGolemEntity extends AbstractFastMinecoloniesEntity {
         this.getEntityData().isDirty();
     }
 
+    public boolean isResting() {
+        return resting;
+    }
+
+    public void setResting(boolean resting) {
+        this.resting = resting;
+        this.getEntityData().set(DATA_RESTING, resting);
+        this.getEntityData().isDirty();
+    }
+
     @Override
     public @Nullable Component getCustomName() {
         return Component.translatable("entity.golemsculptor.sculpted_golem.name", type.main.getDefaultInstance().getHoverName());
@@ -184,6 +217,20 @@ public class SculptedGolemEntity extends AbstractFastMinecoloniesEntity {
     }
 
     @Override
+    public boolean isInvulnerableTo(DamageSource source) {
+        if (source.is(NeoForgeMod.POISON_DAMAGE)) {
+            return true;
+        }
+        if (source.is(DamageTypeTags.IS_FALL) && this.getColony().getResearchManager().getResearchEffects().getEffectStrength(GolemResearchProvider.FALL) > 0) {
+            return true;
+        }
+        if (source.is(DamageTypeTags.IS_FIRE) && this.getColony().getResearchManager().getResearchEffects().getEffectStrength(GolemResearchProvider.FIRE) > 0) {
+            return true;
+        }
+        return super.isInvulnerableTo(source);
+    }
+
+    @Override
     public void remove(RemovalReason reason) {
         if (building != null) {
             building.removeGolem(this);
@@ -198,8 +245,18 @@ public class SculptedGolemEntity extends AbstractFastMinecoloniesEntity {
             this.stateMachine.tick();
         }
 
+        if (this.attackAnimationTick > 0) {
+            --this.attackAnimationTick;
+        }
+
         this.updateSwingTime();
         super.aiStep();
+    }
+
+    @Override
+    public void onDamageTaken(DamageContainer damageContainer) {
+        super.onDamageTaken(damageContainer);
+        setResting(false);
     }
 
     @Override
@@ -218,9 +275,11 @@ public class SculptedGolemEntity extends AbstractFastMinecoloniesEntity {
     public void readAdditionalSaveData(CompoundTag compound) {
         this.position = compound.getLong("position");
         this.type = GolemType.values()[compound.getInt("type")];
+        this.resting = compound.getBoolean("resting");
         super.readAdditionalSaveData(compound);
         this.getEntityData().set(DATA_GOLEM_TYPE, type.ordinal());
         this.getEntityData().set(DATA_BUILDING_POS, position);
+        this.getEntityData().set(DATA_RESTING, resting);
         this.getEntityData().isDirty();
     }
 
@@ -229,6 +288,7 @@ public class SculptedGolemEntity extends AbstractFastMinecoloniesEntity {
         super.defineSynchedData(builder);
         builder.define(DATA_BUILDING_POS, this.position);
         builder.define(DATA_GOLEM_TYPE, this.type == null ? -1 : this.type.ordinal());
+        builder.define(DATA_RESTING, this.resting);
     }
 
     @Override
@@ -239,6 +299,8 @@ public class SculptedGolemEntity extends AbstractFastMinecoloniesEntity {
                 this.position = this.getEntityData().get(DATA_BUILDING_POS);
             } else if (DATA_GOLEM_TYPE.equals(key)) {
                 this.type = this.getEntityData().get(DATA_GOLEM_TYPE) == -1 ? null : GolemType.values()[this.getEntityData().get(DATA_GOLEM_TYPE)];
+            } else if (DATA_RESTING.equals(key)) {
+                this.resting = this.getEntityData().get(DATA_RESTING);
             }
         }
     }
@@ -260,9 +322,55 @@ public class SculptedGolemEntity extends AbstractFastMinecoloniesEntity {
 
     public static AttributeSupplier.Builder getDefaultAttributes() {
         return LivingEntity.createLivingAttributes()
-                .add(Attributes.ATTACK_DAMAGE, 1.0)
                 .add(Attributes.FOLLOW_RANGE, 100.0)
                 .add(Attributes.ARMOR_TOUGHNESS, 4.0)
-                .add(Attributes.ARMOR, 4.0);
+                .add(Attributes.ARMOR, 4.0)
+                .add(Attributes.MOVEMENT_SPEED, 0.25)
+                .add(Attributes.MAX_HEALTH, 40.0)
+                .add(Attributes.KNOCKBACK_RESISTANCE, 1.0)
+                .add(Attributes.ATTACK_KNOCKBACK, 1.0);
+    }
+
+    @Override
+    public void registerControllers(final AnimatableManager.ControllerRegistrar controllers) {
+        controllers.add(DefaultAnimations.genericWalkIdleController(this));
+        controllers.add(new AnimationController<>(this, "Attack", 0, this::attack));
+        controllers.add(new AnimationController<>(this, "Deactivated", 0, this::getDeactivatedState));
+
+    }
+
+    private <E extends SculptedGolemEntity> PlayState getDeactivatedState(final AnimationState<E> state) {
+        if (resting) {
+            return state.setAndContinue(DEACTIVATED);
+        }
+        return PlayState.STOP;
+    }
+
+    private <E extends SculptedGolemEntity> PlayState attack(final AnimationState<E> state) {
+        if (attackAnimationTick > 0) {
+            return state.setAndContinue(DefaultAnimations.ATTACK_SWING);
+        }
+        state.getController().forceAnimationReset();
+        return PlayState.STOP;
+    }
+
+    public void startAttack() {
+        this.attackAnimationTick = 10;
+        this.level().broadcastEntityEvent(this, (byte)4);
+    }
+
+    @Override
+    public void handleEntityEvent(byte id) {
+        if (id == 4) {
+            this.attackAnimationTick = 10;
+        } else {
+            super.handleEntityEvent(id);
+        }
+
+    }
+
+    @Override
+    public AnimatableInstanceCache getAnimatableInstanceCache() {
+        return this.geoCache;
     }
 }

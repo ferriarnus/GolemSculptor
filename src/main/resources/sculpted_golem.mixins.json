@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "dev.ferriarnus.golemsculptor.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "MixinRaiderMeleeAI",
+    "MixinRaiderRangeAI"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
